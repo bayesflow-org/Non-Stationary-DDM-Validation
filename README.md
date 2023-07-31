@@ -1,1 +1,1 @@
-# Non-Stationary-DDM-Validation
+# Validation of a Non-Stationary Diffusion Decision Model
