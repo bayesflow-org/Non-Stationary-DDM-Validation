@@ -26,9 +26,12 @@ def sample_ddm_params(loc=default_priors["ddm_loc"],
     prior_draws : np.array
         The randomly drawn DDM parameters, v, a, tau.
     """
+    lower = (a - np.array(loc)) / np.array(scale)
+    upper = (b - np.array(loc)) / np.array(scale)
+
     return truncnorm.rvs(
-        a=(a - loc) / scale,
-        b=(b - loc) / scale,
+        a=lower,
+        b=upper,
         loc=loc,
         scale=scale
         )
@@ -50,7 +53,7 @@ def sample_random_walk_hyper(loc=default_priors["scale_loc"],
         The randomly drawn scale parameters.
     """
 
-    return halfnorm.rvs(loc=loc, scale=scale, size=3)
+    return halfnorm.rvs(loc=loc, scale=scale)
 
 def sample_mixture_random_walk_hyper(loc=default_priors["scale_loc"],
                                      scale=default_priors["scale_scale"],
@@ -81,14 +84,14 @@ def sample_mixture_random_walk_hyper(loc=default_priors["scale_loc"],
     # Configure RNG, if not provided
     if rng is None:
         rng = np.random.default_rng()
-    scales = halfnorm.rvs(loc=loc, scale=scale, size=3)
-    q = rng.uniform(low=low, high=high)
-    return np.concatenate([scales, q])
+    scales = halfnorm.rvs(loc=loc, scale=scale)
+    switch_probabilities = rng.uniform(low=low, high=high)
+    return np.concatenate([scales, switch_probabilities])
 
 def sample_levy_flight_hyper(loc=default_priors["scale_loc"],
                              scale=default_priors["scale_scale"],
                              a=default_priors["alpha_a"],
-                             b=default_priors["aplha_b"],
+                             b=default_priors["alpha_b"],
                              rng=None):
     """Generates random draws from a half-normal prior over the scale and
     random draws from a beta prior over the alpha parameter of the levy flight.
@@ -113,11 +116,13 @@ def sample_levy_flight_hyper(loc=default_priors["scale_loc"],
     # Configure RNG, if not provided
     if rng is None:
         rng = np.random.default_rng()
-    scales = halfnorm.rvs(loc=loc, scale=scale, size=3)
+    scales = halfnorm.rvs(loc=loc, scale=scale)
     alphas = rng.beta(a=a, b=b) + 1.0
     return np.concatenate([scales, alphas])
 
-def sample_regime_switching_hyper(low=default_priors["q_low"],
+def sample_regime_switching_hyper(loc=default_priors["scale_loc"],
+                                  scale=default_priors["scale_scale"],
+                                  low=default_priors["q_low"],
                                   high=default_priors["q_high"],
                                   rng=None):
     """Generates random draws from a half-normal prior over the scale and
@@ -126,6 +131,10 @@ def sample_regime_switching_hyper(low=default_priors["q_low"],
 
     Parameters:
     -----------
+    loc   : float, optional, default: ``configuration.default_priors["scale_loc"]``
+        The location parameter of the half-normal distribution.
+    scale : float, optional, default: ``configuration.default_priors["scale_scale"]``
+        The scale parameter of the half-normal distribution.
     low  : float, optional, default: ``configuration.default_priors["q_low"]``
         The low parameter of the uniform distribution.
     high : float, optional, default: ``configuration.default_priors["q_high"]``
@@ -141,7 +150,9 @@ def sample_regime_switching_hyper(low=default_priors["q_low"],
     # Configure RNG, if not provided
     if rng is None:
         rng = np.random.default_rng()
-    return rng.uniform(low=low, high=high)
+    scales = halfnorm.rvs(loc=loc[2], scale=scale[2])
+    switch_probabilities = rng.uniform(low=low, high=high)
+    return np.concatenate([switch_probabilities, [scales]])
 
 def sample_random_walk(hyper_params,
                        num_steps=800,
@@ -218,12 +229,12 @@ def sample_mixture_random_walk(hyper_params,
     theta_t[0] = sample_ddm_params()
     # randomness
     z = rng.normal(size=(num_steps - 1, 3))
-    switch_probability = rng.randn(size=(num_steps - 1, 2))
-    switch = switch_probability > hyper_params[3:]
+    switch_samples = rng.random(size=(num_steps - 1, 2))
+    stay = switch_samples > hyper_params[3:]
     # transition model
     for t in range(1, num_steps):
         # update v
-        if switch[t-1, 0]:
+        if stay[t-1, 0]:
             theta_t[t, 0] = np.clip(
                 theta_t[t-1, 0] + hyper_params[0] * z[t-1, 0],
                 a_min=lower_bounds[0], a_max=upper_bounds[0]
@@ -231,7 +242,7 @@ def sample_mixture_random_walk(hyper_params,
         else:
             theta_t[t, 0] = rng.uniform(lower_bounds[0], upper_bounds[0])
         # update a
-        if switch[t-1, 1]:
+        if stay[t-1, 1]:
             theta_t[t, 1] = np.clip(
                 theta_t[t-1, 1] + hyper_params[1] * z[t-1, 1],
                 a_min=lower_bounds[1], a_max=upper_bounds[1]
@@ -328,21 +339,24 @@ def sample_regime_switching(hyper_params,
     theta_t = np.zeros((num_steps, 3))
     theta_t[0] = sample_ddm_params()
     # randomness
-    z = rng.normal(size=(num_steps - 1, 3))
-    switch_probability = rng.randn(size=(num_steps - 1, 2))
-    switch = switch_probability > hyper_params
+    z_norm = rng.normal(size=(num_steps - 1))
+    switch_samples = rng.random(size=(num_steps - 1, 2))
+    stay = switch_samples > hyper_params[:2]
     # transition model
     for t in range(1, num_steps):
         # update v
-        if switch[t-1, 0]:
+        if stay[t-1, 0]:
             theta_t[t, 0] = theta_t[t-1, 0]
         else:
             theta_t[t, 0] = rng.uniform(lower_bounds[0], upper_bounds[0])
         # update a
-        if switch[t-1, 1]:
-            theta_t[t, 1] = theta_t[t, 1]
+        if stay[t-1, 1]:
+            theta_t[t, 1] = theta_t[t-1, 1]
         else:
-            theta_t[t, 1] = rng.uniform(lower_bounds[1], upper_bounds[1]) 
+            theta_t[t, 1] = rng.uniform(lower_bounds[1], upper_bounds[1])
         # update tau
-        theta_t[t, 2] = theta_t[t, 2]
+        theta_t[t, 2] = np.clip(
+            theta_t[t-1, 2] + hyper_params[2] * z_norm[t-1],
+            a_min=lower_bounds[2], a_max=upper_bounds[2]
+            )
     return theta_t
