@@ -46,7 +46,7 @@ class ModelComparisonExperiment():
             ]
         )
         self.inference_network = bf.networks.PMPNetwork(
-            config["inference_network_settings"]
+            **config.get("inference_network_settings")
             )
         self.amortizer = bf.amortizers.AmortizedModelComparison(
             self.inference_network,
@@ -60,7 +60,10 @@ class ModelComparisonExperiment():
     def run(self, simulations_dict, epochs=75, batch_size=32):
         """Wrapper for offline training"""
 
-        history = self.trainer.train_offline(epochs, batch_size)
+        history = self.trainer.train_offline(
+            simulations_dict=simulations_dict,
+            epochs=epochs,
+            batch_size=batch_size)
         return history
     
     def evaluate(self):
