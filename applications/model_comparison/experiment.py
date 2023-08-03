@@ -9,7 +9,7 @@ class ModelComparisonExperiment():
 
     def __init__(self, config=default_settings):
         """Creates an instance of the model with given configuration.
-        
+
         Parameters:
         -----------
         config  : dict, optional, default: ``configuration.default_settings``
@@ -17,7 +17,7 @@ class ModelComparisonExperiment():
             ``lstm1_hidden_units`` - The dimensions of the first LSTM of the first summary net
             ``lstm2_hidden_units`` - The dimensions of the second LSTM of the first summary net
             ``lstm3_hidden_units`` - The dimensions of the third LSTM of the second summary net
-            ``trainer``            - The settings for the ``bf.trainers.Trainer``, not icnluding   
+            ``trainer``            - The settings for the ``bf.trainers.Trainer``, not icnluding
                 the ``amortizer``, ``generative_model``, and ``configurator`` keys,
                 as these will be provided internaly by the Experiment instance
         """
@@ -57,9 +57,9 @@ class ModelComparisonExperiment():
             **config.get("trainer")
         )
 
-    def run(self, training_data, validation_data=None, epochs=25, batch_size=32):
+    def run(self, training_data, validation_data=None, epochs=50, batch_size=32):
         """Wrapper for offline training
-        
+
         Parameters:
         -----------
         training_data : dict
@@ -78,6 +78,6 @@ class ModelComparisonExperiment():
             epochs=epochs,
             batch_size=batch_size)
         return history
-    
+
     def evaluate(self):
         pass
