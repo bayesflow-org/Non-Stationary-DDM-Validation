@@ -57,12 +57,24 @@ class ModelComparisonExperiment():
             **config.get("trainer")
         )
 
-    def run(self, training_data, validation_sims=None, epochs=25, batch_size=32):
-        """Wrapper for offline training"""
+    def run(self, training_data, validation_data=None, epochs=25, batch_size=32):
+        """Wrapper for offline training
+        
+        Parameters:
+        -----------
+        training_data : dict
+            Simulated data from the models to compare for training.
+        validation_data: dict
+            Simulated data from the models to compare for validation.
+        epochs: int, optional, default: 25
+            Number of trainig epochs.
+        batch_size: int, optional, default: 32
+            Number of simulated data sets per batch.
+        """
 
         history = self.trainer.train_offline(
             simulations_dict=training_data,
-            validation_sims=validation_sims,
+            validation_sims=validation_data,
             epochs=epochs,
             batch_size=batch_size)
         return history
