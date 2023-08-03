@@ -57,11 +57,12 @@ class ModelComparisonExperiment():
             **config.get("trainer")
         )
 
-    def run(self, simulations_dict, epochs=75, batch_size=32):
+    def run(self, training_data, validation_sims=None, epochs=25, batch_size=32):
         """Wrapper for offline training"""
 
         history = self.trainer.train_offline(
-            simulations_dict=simulations_dict,
+            simulations_dict=training_data,
+            validation_sims=validation_sims,
             epochs=epochs,
             batch_size=batch_size)
         return history
