@@ -22,7 +22,7 @@ experiment = ModelComparisonExperiment()
 
 with open('data/training_data.pkl', 'rb') as f:
     training_data = pickle.load(f)
-with open(data/validation_data.pkl', 'rb') as f:
+with open('data/validation_data.pkl', 'rb') as f:
     validation_data = pickle.load(f)
 
 history = experiment.run(
