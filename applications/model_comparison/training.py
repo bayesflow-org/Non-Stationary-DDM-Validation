@@ -1,6 +1,6 @@
 # Get rid of annoying tf warning
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import pickle
 import numpy as np
@@ -20,9 +20,9 @@ print(tf.config.list_physical_devices('GPU'))
 
 experiment = ModelComparisonExperiment()
 
-with open('../data/training_data.pkl', 'rb') as f:
+with open('data/training_data.pkl', 'rb') as f:
     training_data = pickle.load(f)
-with open('../data/validation_data.pkl', 'rb') as f:
+with open(data/validation_data.pkl', 'rb') as f:
     validation_data = pickle.load(f)
 
 history = experiment.run(
