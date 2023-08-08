@@ -27,5 +27,6 @@ with open('data/validation_data.pkl', 'rb') as f:
 
 history = experiment.run(
     training_data=training_data,
-    validation_data=None
+    validation_data=None,
+    epochs=25
     )
