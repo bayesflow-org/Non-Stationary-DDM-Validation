@@ -22,29 +22,30 @@ class ModelComparisonExperiment():
                 as these will be provided internaly by the Experiment instance
         """
 
-        self.summary_network = bf.networks.HierarchicalNetwork(
-            [
-                tf.keras.Sequential(
-                    [
-                        tf.keras.layers.LSTM(
-                            config["lstm1_hidden_units"],
-                            return_sequences=True
-                        ),
-                        tf.keras.layers.LSTM(
-                            config["lstm2_hidden_units"],
-                            return_sequences=True
-                        ),
-                    ]
-                ),
-                tf.keras.Sequential(
-                    [
-                        tf.keras.layers.LSTM(
-                            config["lstm3_hidden_units"]
-                        )
-                    ]
-                )
-            ]
-        )
+        # self.summary_network = bf.networks.HierarchicalNetwork(
+        #     [
+        #         tf.keras.Sequential(
+        #             [
+        #                 tf.keras.layers.LSTM(
+        #                     config["lstm1_hidden_units"],
+        #                     return_sequences=True
+        #                 ),
+        #                 tf.keras.layers.LSTM(
+        #                     config["lstm2_hidden_units"],
+        #                     return_sequences=True
+        #                 ),
+        #             ]
+        #         ),
+        #         tf.keras.Sequential(
+        #             [
+        #                 tf.keras.layers.LSTM(
+        #                     config["lstm3_hidden_units"]
+        #                 )
+        #             ]
+        #         )
+        #     ]
+        # )
+        self.summary_network = bf.networks.TimeSeriesTransformer(input_dim=1, summary_dim=64)
         self.inference_network = bf.networks.PMPNetwork(
             **config.get("inference_network_settings")
             )
