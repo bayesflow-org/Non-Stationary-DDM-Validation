@@ -8,7 +8,7 @@ from likelihoods import *
 from configurations import default_priors
 
 class DiffusionDecisionModel(ABC):
-    """An interface for running a standardized simulated experiment."""
+    """An interface for a non-stationary diffusion decision model."""
 
     @abstractmethod
     def __init__(self):
