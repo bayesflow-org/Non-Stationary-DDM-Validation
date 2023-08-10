@@ -7,7 +7,7 @@ default_settings = {
         "dropout_prob": 0.1,
     },
     "trainer": {
-        "checkpoint_path": "../checkpoints/model_comparison",
+        "checkpoint_path": "../checkpoints/model_comparison_template_dim_128",
         "max_to_keep": 1,
         "default_lr": 5e-4,
         "memory": False,
