@@ -53,9 +53,11 @@ class DiffusionDecisionModel(ABC):
         scales = raw_dict.get("hyper_prior_draws").astype(np.float32)
         rt = raw_dict.get("sim_data").astype(np.float32)[..., None]
         if transform:
+            theta_t_z = (theta_t - self.local_prior_means) / self.local_prior_stds
+            scales_z = (scales - self.hyper_prior_mean) / self.hyper_prior_std
             out_dict = dict(
-                local_parameters=(theta_t - self.local_prior_means) / self.local_prior_stds,
-                hyper_parameters=(scales - self.hyper_prior_mean) / self.hyper_prior_std,
+                local_parameters=theta_t_z.astype(np.float32),
+                hyper_parameters=scales_z.astype(np.float32),
                 summary_conditions=rt,
             )
         else:

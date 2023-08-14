@@ -47,7 +47,7 @@ def sample_non_stationary_diffusion_process(theta_t, beta=0.5, dt=0.001, s=1.0, 
 
     Parameters:
     -----------
-    theta_t : np.ndarray of shape (theta_t, 3)
+    theta_t : np.ndarray of shape (num_steps, 3)
         The trajectory of the 3 latent DDM parameters, v, a, tau.
     beta     : float, optional, default: 0.5
         The starting point parameter. The default corresponds to
