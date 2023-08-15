@@ -20,7 +20,7 @@ class NonStationaryDDMExperiment(Experiment):
     """Wrapper for estimating a non-stationary diffusion decision model
     with the neural superstatistics method."""
 
-    def __init__(self, model, config=default_settings):
+    def __init__(self, model, checkpoint_path=None, config=default_settings):
         """Creates an instance of the model with given configuration. When used in a BayesFlow pipeline,
         only the attribute ``self.generator`` and the method ``self.configure`` should be used.
 
@@ -90,11 +90,27 @@ class NonStationaryDDMExperiment(Experiment):
             amortizer=self.amortizer,
             generative_model=self.model.generate,
             configurator=self.model.configure,
+            checkpoint_path=checkpoint_path,
             **config.get("trainer")
         )
 
-    def run(self, epochs=75, iterations_per_epoch=1000, batch_size=32):
-        """Proxy for online training."""
+    def run(self, epochs=75, iterations_per_epoch=1000, batch_size=16):
+        """Wrapper for online training
+
+        Parameters:
+        -----------
+        epochs: int, optional, default: 75
+            Number of trainig epochs.
+        iterations_per_epoch, int, optional, default: 1000
+            Number of iterations per epoch.
+        batch_size: int, optional, default: 16
+            Number of simulated data sets per batch.
+
+        Returns:
+        --------
+        history : dict
+            A dictionary with the training history/
+        """
 
         history = self.trainer.train_online(epochs, iterations_per_epoch, batch_size)
         return history
