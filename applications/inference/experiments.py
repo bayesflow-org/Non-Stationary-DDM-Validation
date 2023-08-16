@@ -75,7 +75,7 @@ class NonStationaryDDMExperiment(Experiment):
 
         self.global_net = bf.amortizers.AmortizedPosterior(
             bf.networks.InvertibleNetwork(
-                num_params=3,
+                num_params=model.hyper_prior_mean.shape[0],
                 **config.get("global_amortizer_settings")
             ))
 
