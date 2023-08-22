@@ -14,7 +14,6 @@ class Experiment(ABC):
     def __init__(self):
         pass
 
-    @abstractmethod
     def run(self, epochs=75, iterations_per_epoch=1000, batch_size=16):
         """Wrapper for online training
 
@@ -55,7 +54,7 @@ class SmoothingExperiment(Experiment):
             ``lstm1_hidden_units``        - The dimensions of the first LSTM of the first summary net
             ``lstm2_hidden_units``        - The dimensions of the second LSTM of the first summary net
             ``lstm3_hidden_units``        - The dimensions of the third LSTM of the second summary net
-            ``trainer``                   - The settings for the ``bf.trainers.Trainer``, not icnluding   
+            ``trainer``                   - The settings for the ``bf.trainers.Trainer``, not icnluding
                 the ``amortizer``, ``generative_model``, and ``configurator`` keys,
                 as these will be provided internaly by the Experiment instance
         """
@@ -117,7 +116,7 @@ class FilteringExperiment(Experiment):
             ``lstm1_hidden_units``        - The dimensions of the first LSTM of the first summary net
             ``lstm2_hidden_units``        - The dimensions of the second LSTM of the first summary net
             ``lstm3_hidden_units``        - The dimensions of the third LSTM of the second summary net
-            ``trainer``                   - The settings for the ``bf.trainers.Trainer``, not icnluding   
+            ``trainer``                   - The settings for the ``bf.trainers.Trainer``, not icnluding
                 the ``amortizer``, ``generative_model``, and ``configurator`` keys,
                 as these will be provided internaly by the Experiment instance
         """
@@ -159,4 +158,3 @@ class FilteringExperiment(Experiment):
             checkpoint_path=checkpoint_path,
             **config.get("trainer")
         )
-
