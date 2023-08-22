@@ -25,7 +25,7 @@ class ModelComparisonExperiment():
         self.summary_network = bf.networks.TimeSeriesTransformer(
             input_dim=1,
             template_dim=128,
-            summary_dim=64
+            summary_dim=128
             )
         self.inference_network = bf.networks.PMPNetwork(
             **config.get("inference_network_settings")
@@ -39,7 +39,7 @@ class ModelComparisonExperiment():
             **config.get("trainer")
         )
 
-    def run(self, training_data, validation_data=None, epochs=50, batch_size=16):
+    def run(self, training_data, validation_data=None, epochs=25, batch_size=16):
         """Wrapper for offline training
 
         Parameters:
