@@ -48,7 +48,7 @@ class ModelComparisonExperiment():
             Simulated data from the models to compare for training.
         validation_data: dict
             Simulated data from the models to compare for validation.
-        epochs: int, optional, default: 50
+        epochs: int, optional, default: 25
             Number of trainig epochs.
         batch_size: int, optional, default: 16
             Number of simulated data sets per batch.

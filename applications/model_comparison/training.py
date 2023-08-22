@@ -4,7 +4,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import pickle
 import numpy as np
-np.set_printoptions(suppress=True)
 
 import bayesflow as beef
 import tensorflow as tf
@@ -22,11 +21,7 @@ experiment = ModelComparisonExperiment()
 
 with open('data/training_data.pkl', 'rb') as f:
     training_data = pickle.load(f)
-with open('data/validation_data.pkl', 'rb') as f:
-    validation_data = pickle.load(f)
 
 history = experiment.run(
-    training_data=training_data,
-    validation_data=None,
-    epochs=25
+    training_data=training_data
     )
