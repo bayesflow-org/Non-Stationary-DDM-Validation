@@ -28,7 +28,7 @@ class DiffusionDecisionModel(ABC):
                 The simulation dictionary configured for ``bayesflow.amortizers.TwoLevelAmortizer``
             """
             return self.generator(batch_size)
-    
+
     def configure(self, raw_dict, transform=True):
         """Configures the output of self.generator for a BayesFlow pipeline.
 
@@ -41,7 +41,7 @@ class DiffusionDecisionModel(ABC):
         raw_dict  : dict
             A simulation dictionary as returned by ``bayesflow.simulation.TwoLevelGenerativeModel``
         transform : boolean, optional, default: True
-            An indicator to standardize the parameter and log-transform the data samples. 
+            An indicator to standardize the parameter and log-transform the data samples.
 
         Returns:
         --------
@@ -213,7 +213,7 @@ class LevyFlightDDM(DiffusionDecisionModel):
             beta(
                 a=default_priors["alpha_a"],
                 b=default_priors["alpha_b"],
-            ).std()
+                ).std()
             ])
         self.local_prior_means = np.array([3.2, 2.6, 1.3])
         self.local_prior_stds = np.array([2.3, 1.6, 1])
@@ -256,14 +256,27 @@ class RegimeSwitchingDDM(DiffusionDecisionModel):
         rng       : np.random.Generator or None, default: None
             An optional random number generator to use, if fixing the seed locally.
         """
-        self.hyper_prior_mean = uniform(
+        self.hyper_prior_mean = np.concatenate([
+            uniform(
                 loc=default_priors["q_low"],
                 scale=default_priors["q_high"],
-            ).mean()
-        self.hyper_prior_std = uniform(
+                ).mean(),
+            [halfnorm(
+                loc=default_priors["scale_loc"][-1],
+                scale=default_priors["scale_scale"][-1],
+                ).mean()]
+            ])
+        self.hyper_prior_std = np.concatenate([
+            uniform(
                 loc=default_priors["q_low"],
                 scale=default_priors["q_high"],
-            ).std()
+                ).std(),
+            [halfnorm(
+                loc=default_priors["scale_loc"][-1],
+                scale=default_priors["scale_scale"][-1],
+                ).std()]
+            ])
+
         self.local_prior_means = np.array([3.2, 2.6, 1.3])
         self.local_prior_stds = np.array([2.3, 1.6, 1])
         # Store local RNG instance
