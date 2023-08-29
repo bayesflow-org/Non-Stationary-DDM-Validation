@@ -25,7 +25,7 @@ class ModelComparisonExperiment():
         self.summary_network = bf.networks.TimeSeriesTransformer(
             input_dim=1,
             template_dim=128,
-            summary_dim=128
+            summary_dim=64
             )
         self.inference_network = bf.networks.PMPNetwork(
             **config.get("inference_network_settings")
