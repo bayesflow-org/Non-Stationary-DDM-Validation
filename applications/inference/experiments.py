@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 import bayesflow as bf
 import tensorflow as tf
 
+from tensorflow.keras.layers import LSTM, Bidirectional
+from tensorflow.keras.models import Sequential
+
 from configurations import default_settings
 
 class Experiment(ABC):
@@ -41,31 +44,14 @@ class NonStationaryDDMExperiment(Experiment):
 
         self.model = model
 
-        # Two-level summary network -> reduce 3D into 3D and 2D
-        # for local and global amortizer, respectively
-        self.summary_network = bf.networks.HierarchicalNetwork(
-            [
-                tf.keras.Sequential(
-                    [
-                        tf.keras.layers.LSTM(
-                            config["lstm1_hidden_units"],
-                            return_sequences=True
-                        ),
-                        tf.keras.layers.LSTM(
-                            config["lstm2_hidden_units"],
-                            return_sequences=True
-                        ),
-                    ]
-                ),
-                tf.keras.Sequential(
-                    [
-                        tf.keras.layers.LSTM(
-                            config["lstm3_hidden_units"]
-                        )
-                    ]
-                )
-            ]
-        )
+        # Smoothing network
+        self.summary_network = bf.networks.HierarchicalNetwork([
+            Sequential([
+                Bidirectional(LSTM(config["lstm1_hidden_units"], return_sequences=True)),
+                Bidirectional(LSTM(config["lstm2_hidden_units"], return_sequences=True)),
+            ]),
+            Sequential([Bidirectional(LSTM(config["lstm3_hidden_units"]))])
+        ])
 
         self.local_net = bf.amortizers.AmortizedPosterior(
             bf.networks.InvertibleNetwork(
