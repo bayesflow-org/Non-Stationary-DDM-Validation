@@ -23,35 +23,48 @@ class NonStationaryDDMExperiment(Experiment):
     """Wrapper for estimating a non-stationary diffusion decision model
     with the neural superstatistics method."""
 
-    def __init__(self, model, checkpoint_path=None, config=default_settings):
+    def __init__(self, model, summary_network_type="smoothing", checkpoint_path=None, config=default_settings):
         """Creates an instance of the model with given configuration. When used in a BayesFlow pipeline,
         only the attribute ``self.generator`` and the method ``self.configure`` should be used.
 
         Parameters:
         -----------
-        model   : an instance of models.RandomWalkDiffusion
+        model                : an instance of models.RandomWalkDiffusion
             The model wrapper, should include a callable attribute ``generator`` and a method
-            ``configure()``
-        config  : dict, optional, default: ``configuration.default_settings``
+            ``configure()``.
+        summary_network_type : string, optional, default: "smoothing"
+            The type of the summary network. Either bidirectional ("smoothing") or
+            unidirectional ("filtering") LSTM.
+        checkpoint_path      : string or None, optional, default: None
+            Optional file path for storing the trained amortizer, loss history and optional memory.
+        config               : dict, optional, default: ``configuration.default_settings``
             A configuration dictionary with the following keys:
-            ``lstm1_hidden_units``        - The dimensions of the first LSTM of the first summary net
-            ``lstm2_hidden_units``        - The dimensions of the second LSTM of the first summary net
-            ``lstm3_hidden_units``        - The dimensions of the third LSTM of the second summary net
-            ``trainer``                   - The settings for the ``bf.trainers.Trainer``, not icnluding   
-                the ``amortizer``, ``generative_model``, and ``configurator`` keys,
-                as these will be provided internaly by the Experiment instance
+            ``lstm1_hidden_units`` - The dimensions of the first LSTM of the first summary net
+            ``lstm2_hidden_units`` - The dimensions of the second LSTM of the first summary net
+            ``lstm3_hidden_units`` - The dimensions of the third LSTM of the second summary net
+            ``trainer``            - The settings for the ``bf.trainers.Trainer``, not icnluding   
+                                     the ``amortizer``, ``generative_model``, and ``configurator`` keys,
+                                     as these will be provided internaly by the Experiment instance
         """
 
         self.model = model
 
-        # Smoothing network
-        self.summary_network = bf.networks.HierarchicalNetwork([
-            Sequential([
-                Bidirectional(LSTM(config["lstm1_hidden_units"], return_sequences=True)),
-                Bidirectional(LSTM(config["lstm2_hidden_units"], return_sequences=True)),
-            ]),
-            Sequential([Bidirectional(LSTM(config["lstm3_hidden_units"]))])
-        ])
+        if summary_network_type == "smoothing":
+            self.summary_network = bf.networks.HierarchicalNetwork([
+                Sequential([
+                    Bidirectional(LSTM(config["lstm1_hidden_units"], return_sequences=True)),
+                    Bidirectional(LSTM(config["lstm2_hidden_units"], return_sequences=True)),
+                ]),
+                Sequential([Bidirectional(LSTM(config["lstm3_hidden_units"]))])
+            ])
+        if summary_network_type == "filtering":
+            self.summary_network = bf.networks.HierarchicalNetwork([
+                Sequential([
+                    LSTM(config["lstm1_hidden_units"], return_sequences=True),
+                    LSTM(config["lstm2_hidden_units"], return_sequences=True),
+                ]),
+                Sequential([LSTM(config["lstm3_hidden_units"])])
+            ])
 
         self.local_net = bf.amortizers.AmortizedPosterior(
             bf.networks.InvertibleNetwork(
