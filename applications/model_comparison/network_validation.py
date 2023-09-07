@@ -55,9 +55,9 @@ if __name__ == '__main__':
         checkpoint_path=f'checkpoints/ensemble_{ensemble}'
         )
         model_probs_per_ensemble[ensemble] = get_model_probablities(trainer)
-    
+
     np.save('data/validation_model_probs_per_ensemble.npy', model_probs_per_ensemble)
-    
+
     # aggregate over ensembles
     average_model_probs = model_probs_per_ensemble.mean(axis=1)
 
@@ -79,14 +79,7 @@ if __name__ == '__main__':
         average_model_probs,
         model_names=MODEL_NAMES,
         xtick_rotation=45,
-        ytick_rotation=0,
-        model_names=MODEL_NAMES
+        ytick_rotation=0
         )
-    
+
     confusion_matrix.savefig("plots/confusion_matrix.pdf", dpi=300, bbox_inches="tight")
-
-
-
-
-
-
