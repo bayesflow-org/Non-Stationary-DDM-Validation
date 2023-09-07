@@ -26,18 +26,18 @@ class ModelComparisonExperiment():
         """
 
         # Smoothing network
-        self.summary_network = bf.networks.HierarchicalNetwork([
-            Sequential([
-                Bidirectional(LSTM(config["lstm1_hidden_units"], return_sequences=True)),
-                Bidirectional(LSTM(config["lstm2_hidden_units"], return_sequences=True)),
-            ]),
-            Sequential([Bidirectional(LSTM(config["lstm3_hidden_units"]))])
-        ])
-        # self.summary_network = bf.networks.TimeSeriesTransformer(
-        #     input_dim=1,
-        #     template_dim=128,
-        #     summary_dim=64
-        #     )
+        # self.summary_network = bf.networks.HierarchicalNetwork([
+        #     Sequential([
+        #         Bidirectional(LSTM(config["lstm1_hidden_units"], return_sequences=True)),
+        #         Bidirectional(LSTM(config["lstm2_hidden_units"], return_sequences=True)),
+        #     ]),
+        #     Sequential([Bidirectional(LSTM(config["lstm3_hidden_units"]))])
+        # ])
+        self.summary_network = bf.networks.TimeSeriesTransformer(
+            input_dim=1,
+            template_dim=128,
+            summary_dim=64
+            )
         self.inference_network = bf.networks.PMPNetwork(
             **config.get("inference_network_settings")
             )
