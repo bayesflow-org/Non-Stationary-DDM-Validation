@@ -8,6 +8,12 @@ from tensorflow.keras.backend import clear_session
 
 from experiment import ModelComparisonExperiment
 
+import matplotlib
+matplotlib.rcParams['font.sans-serif'] = "Palatino"
+matplotlib.rcParams['font.family'] = "sans-serif"
+
+FIT_MODEL = False
+
 NUM_MODELS = 4
 ENSEMBLE_SIZE = 10
 SIMULATION_PER_MODEL = 10000
@@ -26,7 +32,7 @@ model_indices = tf.one_hot(np.tile(np.repeat(
     [0, 1, 2, 3], CHUNCK_SIZE), int((SIMULATION_PER_MODEL/CHUNCK_SIZE))), NUM_MODELS
     )
 
-def get_model_probablities(trainer):
+def get_model_probabilities(trainer):
     model_probs = np.zeros((int(SIMULATION_PER_MODEL*NUM_MODELS), NUM_MODELS))
     chunks = np.arange(0, SIMULATION_PER_MODEL+1, CHUNCK_SIZE)
     for i in range(len(chunks)-1):
@@ -48,18 +54,21 @@ def get_model_probablities(trainer):
     return model_probs
 
 if __name__ == '__main__':
-    model_probs_per_ensemble = np.zeros((ENSEMBLE_SIZE, SIMULATION_PER_MODEL*NUM_MODELS, NUM_MODELS))
-    for ensemble in tqdm(range(ENSEMBLE_SIZE)):
-        clear_session()
-        trainer = ModelComparisonExperiment(
-        checkpoint_path=f'checkpoints/ensemble_{ensemble}'
-        )
-        model_probs_per_ensemble[ensemble] = get_model_probablities(trainer)
+    if FIT_MODEL:
+        model_probs_per_ensemble = np.zeros((ENSEMBLE_SIZE, SIMULATION_PER_MODEL*NUM_MODELS, NUM_MODELS))
+        for ensemble in tqdm(range(ENSEMBLE_SIZE)):
+            clear_session()
+            trainer = ModelComparisonExperiment(
+            checkpoint_path=f'checkpoints/ensemble_{ensemble}'
+            )
+            model_probs_per_ensemble[ensemble] = get_model_probabilities(trainer)
 
-    np.save('data/validation_model_probs_per_ensemble.npy', model_probs_per_ensemble)
+        np.save('data/validation_model_probs_per_ensemble.npy', model_probs_per_ensemble)
+    else:
+        model_probs_per_ensemble = np.load('data/validation_model_probs_per_ensemble.npy')
 
     # aggregate over ensembles
-    average_model_probs = model_probs_per_ensemble.mean(axis=1)
+    average_model_probs = model_probs_per_ensemble.mean(axis=0)
 
     cal_curves = beef.diagnostics.plot_calibration_curves(
         true_models=model_indices,
