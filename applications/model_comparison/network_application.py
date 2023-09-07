@@ -1,7 +1,8 @@
 import bayesflow as beef
 import numpy as np
 import pandas as pd
-import tensorflow as tf
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 from tensorflow.keras.backend import clear_session
@@ -17,6 +18,13 @@ FIT_MODEL = True
 NUM_OBS = 768
 NUM_MODELS = 4
 ENSEMBLE_SIZE = 10
+MODEL_NAMES = [
+    'Random walk', 'Mixture random walk',
+    'Levy flight', 'Regime switching'
+    ]
+FONT_SIZE_1 = 24
+FONT_SIZE_2 = 20
+FONT_SIZE_3 = 16
 
 configurator = beef.configuration.DefaultModelComparisonConfigurator(NUM_MODELS)
 
@@ -30,9 +38,6 @@ for i in range(NUM_SUBJECTS):
     emp_data[i] = tmp['rt'].to_numpy()[:, np.newaxis]
 EMPIRIC_DATA = {'summary_conditions': emp_data}
 
-def get_model_probabilities(data, trainer):
-    return trainer.amortizer.posterior_probs(data)
-
 if __name__ == '__main__':
     if FIT_MODEL:
         model_probs_per_ensemble = np.zeros((ENSEMBLE_SIZE, NUM_SUBJECTS, NUM_MODELS))
@@ -41,8 +46,40 @@ if __name__ == '__main__':
             trainer = ModelComparisonExperiment(
                 checkpoint_path=f'checkpoints/ensemble_{ensemble}'
             )
-            model_probs_per_ensemble[ensemble] = get_model_probabilities(EMPIRIC_DATA, trainer)
+            model_probs_per_ensemble[ensemble] = trainer.amortizer.posterior_probs(EMPIRIC_DATA)
 
         np.save('data/empiric_model_probs_per_ensemble.npy', model_probs_per_ensemble)
     else:
         model_probs_per_ensemble = np.load('data/empiric_model_probs_per_ensemble.npy')
+
+    # compute proportion winning model
+    binary_model_prob = np.zeros(model_probs_per_ensemble.shape)
+    for i in range(ENSEMBLE_SIZE):
+        tmp_mat = model_probs_per_ensemble[i]
+        binary_model_prob[i][np.arange(tmp_mat.shape[0]), np.argmax(tmp_mat, axis=1)] = 1
+    binary_model_prob_per_ensemble = binary_model_prob.mean(axis=1)
+    mean_binary_model_prob_per_ensemble = binary_model_prob_per_ensemble.mean(axis=0)
+    std_binary_model_prob_per_ensemble = binary_model_prob_per_ensemble.std(axis=0)
+
+    fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+    ax.scatter(
+        MODEL_NAMES,
+        mean_binary_model_prob_per_ensemble,
+        color='maroon', alpha=1.0
+    )
+    ax.errorbar(
+        MODEL_NAMES,
+        mean_binary_model_prob_per_ensemble,
+        yerr=std_binary_model_prob_per_ensemble,
+        fmt='none', capsize=5, elinewidth=1,
+        color='maroon', alpha=0.8
+        )
+
+    ax.set_xticks(MODEL_NAMES, MODEL_NAMES, rotation=45, ha="right")
+    ax.tick_params(axis='both', which='major', labelsize=FONT_SIZE_3)
+    ax.set_ylabel("Average maximal\nmodel probabilty", rotation=0, labelpad=90, fontsize=FONT_SIZE_2)
+    ax.set_xlabel("Model", fontsize=FONT_SIZE_2)
+    ax.set_ylim(-0.05, 1)
+    sns.despine()
+
+    fig.savefig("plots/model_probabilties.pdf", dpi=300, bbox_inches="tight")
