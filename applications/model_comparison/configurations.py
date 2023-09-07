@@ -7,7 +7,6 @@ default_settings = {
         "dropout_prob": 0.05,
     },
     "trainer": {
-        "checkpoint_path": "checkpoints/epochs_25_dropout_prob_005_batchsize_16_ensemble_1",
         "max_to_keep": 1,
         "default_lr": 5e-4,
         "memory": False,

@@ -10,7 +10,7 @@ from configurations import default_settings
 class ModelComparisonExperiment():
     """Wrapper for model comparison of different non-stationary DDMs."""
 
-    def __init__(self, config=default_settings):
+    def __init__(self, checkpoint_path=None, config=default_settings):
         """Creates an instance of the model with given configuration.
 
         Parameters:
@@ -25,14 +25,6 @@ class ModelComparisonExperiment():
                 as these will be provided internaly by the Experiment instance
         """
 
-        # Smoothing network
-        # self.summary_network = bf.networks.HierarchicalNetwork([
-        #     Sequential([
-        #         Bidirectional(LSTM(config["lstm1_hidden_units"], return_sequences=True)),
-        #         Bidirectional(LSTM(config["lstm2_hidden_units"], return_sequences=True)),
-        #     ]),
-        #     Sequential([Bidirectional(LSTM(config["lstm3_hidden_units"]))])
-        # ])
         self.summary_network = bf.networks.TimeSeriesTransformer(
             input_dim=1,
             template_dim=128,
@@ -47,6 +39,7 @@ class ModelComparisonExperiment():
             )
         self.trainer = bf.trainers.Trainer(
             amortizer=self.amortizer,
+            checkpoint_path=checkpoint_path,
             **config.get("trainer")
         )
 
