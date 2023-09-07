@@ -54,7 +54,7 @@ class DiffusionDecisionModel(ABC):
         rt = raw_dict.get("sim_data").astype(np.float32)[..., None]
         if transform:
             theta_t_z = (theta_t - self.local_prior_means) / self.local_prior_stds
-            scales_z = (scales - self.hyper_prior_mean) / self.hyper_prior_std
+            scales_z = (scales - self.hyper_prior_means) / self.hyper_prior_stds
             out_dict = dict(
                 local_parameters=theta_t_z.astype(np.float32),
                 hyper_parameters=scales_z.astype(np.float32),
@@ -87,10 +87,10 @@ class RandomWalkDDM(DiffusionDecisionModel):
         rng       : np.random.Generator or None, default: None
             An optional random number generator to use, if fixing the seed locally.
         """
-        self.hyper_prior_mean = halfnorm(
+        self.hyper_prior_means = halfnorm(
             loc=default_priors["scale_loc"],
             scale=default_priors["scale_scale"]).mean()
-        self.hyper_prior_std = halfnorm(
+        self.hyper_prior_stds = halfnorm(
             loc=default_priors["scale_loc"],
             scale=default_priors["scale_scale"]).std()
         self.local_prior_means = np.array([2.8, 2.5, 1.3])
@@ -134,7 +134,7 @@ class MixtureRandomWalkDDM(DiffusionDecisionModel):
         rng       : np.random.Generator or None, default: None
             An optional random number generator to use, if fixing the seed locally.
         """
-        self.hyper_prior_mean = np.concatenate([
+        self.hyper_prior_means = np.concatenate([
             halfnorm(
                 loc=default_priors["scale_loc"],
                 scale=default_priors["scale_scale"]
@@ -144,7 +144,7 @@ class MixtureRandomWalkDDM(DiffusionDecisionModel):
                 scale=default_priors["q_high"],
             ).mean()
             ])
-        self.hyper_prior_std = np.concatenate([
+        self.hyper_prior_stds = np.concatenate([
             halfnorm(
                 loc=default_priors["scale_loc"],
                 scale=default_priors["scale_scale"]
@@ -195,7 +195,7 @@ class LevyFlightDDM(DiffusionDecisionModel):
         rng       : np.random.Generator or None, default: None
             An optional random number generator to use, if fixing the seed locally.
         """
-        self.hyper_prior_mean = np.concatenate([
+        self.hyper_prior_means = np.concatenate([
             halfnorm(
                 loc=default_priors["scale_loc"],
                 scale=default_priors["scale_scale"]
@@ -205,7 +205,7 @@ class LevyFlightDDM(DiffusionDecisionModel):
                 b=default_priors["alpha_b"],
             ).mean()
             ])
-        self.hyper_prior_std = np.concatenate([
+        self.hyper_prior_stds = np.concatenate([
             halfnorm(
                 loc=default_priors["scale_loc"],
                 scale=default_priors["scale_scale"]
@@ -256,7 +256,7 @@ class RegimeSwitchingDDM(DiffusionDecisionModel):
         rng       : np.random.Generator or None, default: None
             An optional random number generator to use, if fixing the seed locally.
         """
-        self.hyper_prior_mean = np.concatenate([
+        self.hyper_prior_means = np.concatenate([
             uniform(
                 loc=default_priors["q_low"],
                 scale=default_priors["q_high"],
@@ -266,7 +266,7 @@ class RegimeSwitchingDDM(DiffusionDecisionModel):
                 scale=default_priors["scale_scale"][-1],
                 ).mean()]
             ])
-        self.hyper_prior_std = np.concatenate([
+        self.hyper_prior_stds = np.concatenate([
             uniform(
                 loc=default_priors["q_low"],
                 scale=default_priors["q_high"],

@@ -23,7 +23,7 @@ class NonStationaryDDMExperiment(Experiment):
     """Wrapper for estimating a non-stationary diffusion decision model
     with the neural superstatistics method."""
 
-    def __init__(self, model, summary_network_type="smoothing", checkpoint_path=None, config=default_settings):
+    def __init__(self, model, summary_network_type="smoothing", checkpoint_path=None, skip_checks=False, config=default_settings):
         """Creates an instance of the model with given configuration. When used in a BayesFlow pipeline,
         only the attribute ``self.generator`` and the method ``self.configure`` should be used.
 
@@ -74,7 +74,7 @@ class NonStationaryDDMExperiment(Experiment):
 
         self.global_net = bf.amortizers.AmortizedPosterior(
             bf.networks.InvertibleNetwork(
-                num_params=model.hyper_prior_mean.shape[0],
+                num_params=model.hyper_prior_means.shape[0],
                 **config.get("global_amortizer_settings")
             ))
 
@@ -90,6 +90,7 @@ class NonStationaryDDMExperiment(Experiment):
             generative_model=self.model.generate,
             configurator=self.model.configure,
             checkpoint_path=checkpoint_path,
+            skip_checks=skip_checks,
             **config.get("trainer")
         )
 

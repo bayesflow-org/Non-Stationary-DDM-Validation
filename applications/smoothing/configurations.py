@@ -32,3 +32,5 @@ default_priors = {
     "alpha_a": (1.5, 2.5),
     "alpha_b": (1.5, 1.5)
 }
+
+model_names = ("rw", "mrw", "lf", "rs")
