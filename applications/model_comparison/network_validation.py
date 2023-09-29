@@ -68,7 +68,7 @@ if __name__ == '__main__':
         model_probs_per_ensemble = np.load('data/validation_model_probs_per_ensemble.npy')
 
     # aggregate over ensembles
-    average_model_probs = model_probs_per_ensemble.mean(axis=0) # CHANGE TO MEDIAN!!!!  
+    average_model_probs = model_probs_per_ensemble.mean(axis=0)
 
     cal_curves = beef.diagnostics.plot_calibration_curves(
         true_models=model_indices,

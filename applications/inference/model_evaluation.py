@@ -27,18 +27,31 @@ NUM_RESIMULATIONS = 100
 
 LOCAL_PARAM_LABELS = ['Drift rate', 'Threshold', 'Non-decision time']
 LOCAL_PARAM_NAMES  = [r'v', r'a', r'\tau']
+MODEL_NAMES = [
+    'Random walk DDM', 'Mixture random walk DDM',
+    'Levy flight DDM', 'Regime switching DDM'
+    ]
 
+BAR_WIDTH = np.arange(-0.2, 0.3, 0.1)
+X_AXIS_VALUES = np.arange(4) * 2
+LABELS = [
+    'Empiric', 'Random walk', 'Mixture random walk',
+    'Levy flight', 'Regime switching'
+    ]
+FONT_SIZE_0 = 26
 FONT_SIZE_1 = 24
 FONT_SIZE_2 = 20
 FONT_SIZE_3 = 16
 
-# read empiric data and posterior samples
+# read empiric data, winning model per person, and posterior samples
 data = pd.read_csv('data/data_color_discrimination.csv')
 NUM_SUBJECTS = len(np.unique(data['id']))
 with open('data/posteriors/samples_per_model.pkl', 'rb') as file:
     samples_per_model = pickle.load(file)
+with open('data/winning_model_per_person.pkl', 'rb') as file:
+    winning_model_per_person = pickle.load(file)
 
-def plot_parameter_trajectory(person_data, local_samples, lw=2):
+def plot_parameter_trajectory(person_data, local_samples, model_name, lw=2):
     # get conditions
     condition = person_data['speed_condition'].to_numpy()
     idx_speed = []
@@ -96,6 +109,7 @@ def plot_parameter_trajectory(person_data, local_samples, lw=2):
     sns.despine()
     # fig.tight_layout()
     fig.subplots_adjust(hspace=0.5)
+    fig.suptitle(f'Parameter Trajectory of {model_name}', fontsize=FONT_SIZE_0)
     # legend
     handles = [
         Line2D(xdata=[], ydata=[], color='maroon', alpha=0.8, lw=3, label="Posterior median"),
@@ -112,15 +126,47 @@ def plot_parameter_trajectory(person_data, local_samples, lw=2):
     
     return fig
     
-def posterior_resimulation():
-    pass
+def posterior_resimulation(summaries):
+
 
 
 if __name__ == '__main__':
     for sub in range(NUM_SUBJECTS):
         person_data = data.loc[data.id == sub+1]
-        local_samples = samples_per_model[1]['local_samples'][sub]
-        f = plot_parameter_trajectory(person_data, local_samples)
+        grouped = data.groupby(['speed_condition', 'difficulty'])
+        person_summary = grouped.agg({
+            'rt': ['median', lambda x: np.median(np.abs(x - np.median(x)))]
+        })
+        person_summary = person_summary.reset_index(drop=False)
+        person_summary.columns = ['speed_condition', 'difficulty', 'median', 'mad']
+
+        # parameter trajectory of winning model
+        winning_model = winning_model_per_person[sub]
+        local_samples = samples_per_model[winning_model]['local_samples'][sub]
+        f = plot_parameter_trajectory(person_data, local_samples, MODEL_NAMES[winning_model])
         f.savefig(f"plots/parameter_trajectory_sub_{sub+1}.pdf", dpi=300, bbox_inches="tight")
         
-        # for i, model in enumerate(models):
+        # posterior re-simulation for all models
+        idx = np.random.choice(np.arange(NUM_SAMPLES), NUM_RESIMULATIONS, replace=False)
+        summaries = []
+        summaries.append(person_summary)
+        for i, model in enumerate(models):
+            pred_data = np.abs(
+                model.likelihood(samples_per_model[i]['local_samples'][sub, :, idx, :])['sim_data']
+                )
+            pred_df = pd.DataFrame({
+                'speed_condition': np.tile(person_data['speed_condition'], NUM_RESIMULATIONS),
+                'difficulty': np.tile(person_data['difficulty'], NUM_RESIMULATIONS),
+                'rt': pred_data.flatten(),
+                })
+            grouped = pred_df.groupby(['difficulty', 'speed_condition'])
+            pred_summary = grouped.agg({
+                'rt': ['median', lambda x: np.median(np.abs(x - np.median(x)))]
+            })
+            pred_summary = pred_summary.reset_index(drop=False)
+            pred_summary.columns = ['difficulty', 'speed_condition', 'median', 'mad']
+            summaries.append(pred_summary)
+        
+
+
+

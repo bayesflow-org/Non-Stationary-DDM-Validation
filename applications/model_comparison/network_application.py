@@ -88,7 +88,8 @@ if __name__ == '__main__':
     binary_model_prob_per_person = binary_model_prob.mean(axis=0)
     winning_model_per_person = np.argmax(binary_model_prob_per_person, axis=1)
     winning_model_per_person[-1] = 2
-    winning_model_per_person = [MODEL_NAMES[i] for i in winning_model_per_person]
 
-    with open('data/winning_model_per_person.pkl', 'wb') as file:
-        pickle.dump(winning_model_per_person, file)
+    file_paths = ['data/winning_model_per_person.pkl', '../inference/data/winning_model_per_person.pkl']
+    for file_path in file_paths:
+        with open(file_path, 'wb') as file:
+            pickle.dump(winning_model_per_person, file)

@@ -78,7 +78,7 @@ class SmoothingExperiment(Experiment):
 
         self.global_net = bf.amortizers.AmortizedPosterior(
             bf.networks.InvertibleNetwork(
-                num_params=model.hyper_prior_mean.shape[0],
+                num_params=model.hyper_prior_means.shape[0],
                 **config.get("global_amortizer_settings")
             ))
 
