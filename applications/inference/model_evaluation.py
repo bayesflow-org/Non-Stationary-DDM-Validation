@@ -31,13 +31,16 @@ MODEL_NAMES = [
     'Random walk DDM', 'Mixture random walk DDM',
     'Levy flight DDM', 'Regime switching DDM'
     ]
-
-BAR_WIDTH = np.arange(-0.2, 0.3, 0.1)
+CONDITION_NAMES = ["Accuracy Condition", "Speed Condition"]
+BAR_WIDTH = np.arange(-0.6, 0.7, 0.2)
 X_AXIS_VALUES = np.arange(4) * 2
 LABELS = [
     'Empiric', 'Random walk', 'Mixture random walk',
     'Levy flight', 'Regime switching'
     ]
+COLORS = [
+    "black", "orange", "maroon", "#133a76", "green"
+]
 FONT_SIZE_0 = 26
 FONT_SIZE_1 = 24
 FONT_SIZE_2 = 20
@@ -51,7 +54,7 @@ with open('data/posteriors/samples_per_model.pkl', 'rb') as file:
 with open('data/winning_model_per_person.pkl', 'rb') as file:
     winning_model_per_person = pickle.load(file)
 
-def plot_parameter_trajectory(person_data, local_samples, model_name, lw=2):
+def plot_parameter_trajectory(person_data, local_samples, winning_model, lw=2):
     # get conditions
     condition = person_data['speed_condition'].to_numpy()
     idx_speed = []
@@ -73,13 +76,13 @@ def plot_parameter_trajectory(person_data, local_samples, model_name, lw=2):
         ax.plot(
             range(NUM_OBS),
             post_median[:, i], 
-            color='maroon', alpha=0.9, lw=lw, label="Posterior median"
+            color=COLORS[winning_model+1], alpha=0.9, lw=lw, label="Posterior median"
             )
         ax.fill_between(
             range(NUM_OBS),
             post_median[:, i] - post_mad[:, i],
             post_median[:, i] + post_mad[:, i],
-            color='maroon', alpha=0.5, label="Posterior MAD"
+            color=COLORS[winning_model+1], alpha=0.5, label="Posterior MAD"
             )
 
         # yellow shades
@@ -93,7 +96,7 @@ def plot_parameter_trajectory(person_data, local_samples, model_name, lw=2):
                 range(NUM_OBS),
                 (person_data['difficulty'] - 3) * -2,
                 color='black', alpha=0.5, lw=lw, label="Difficulty manipulation"
-                )
+            )
         # aestehtics
         ax.set_title(f'{LOCAL_PARAM_LABELS[i]} (${LOCAL_PARAM_NAMES[i]}$)', fontsize=FONT_SIZE_1)
         ax.grid(alpha=0.3)
@@ -109,11 +112,11 @@ def plot_parameter_trajectory(person_data, local_samples, model_name, lw=2):
     sns.despine()
     # fig.tight_layout()
     fig.subplots_adjust(hspace=0.5)
-    fig.suptitle(f'Parameter Trajectory of {model_name}', fontsize=FONT_SIZE_0)
+    # fig.suptitle(f'Parameter Trajectory of {MODEL_NAMES[winning_model]}', fontsize=FONT_SIZE_0)
     # legend
     handles = [
-        Line2D(xdata=[], ydata=[], color='maroon', alpha=0.8, lw=3, label="Posterior median"),
-        Patch(facecolor='maroon', alpha=0.5, edgecolor=None, label="Posterior MAD"),
+        Line2D(xdata=[], ydata=[], color=COLORS[winning_model+1], alpha=0.8, lw=3, label="Posterior median"),
+        Patch(facecolor=COLORS[winning_model+1], alpha=0.5, edgecolor=None, label="Posterior MAD"),
         Patch(facecolor='#f0c654', alpha=0.2, edgecolor=None, label="Speed condition"),
         Line2D(xdata=[], ydata=[], color='black', alpha=0.5, lw=3, label="Difficulty condition")
         ]
@@ -123,50 +126,137 @@ def plot_parameter_trajectory(person_data, local_samples, model_name, lw=2):
         fontsize=FONT_SIZE_2, bbox_to_anchor=(0.5, -0.001),
         loc="center", ncol=4
         )
-    
     return fig
     
-def posterior_resimulation(summaries):
+def plot_posterior_resimulation(summaries):
+    handles = []
+    fig, axarr = plt.subplots(1, 2, figsize=(16, 6))
+    for i, ax in enumerate(axarr.flat):
+        for t, summary in enumerate(summaries):
+            ax.scatter(
+                X_AXIS_VALUES + BAR_WIDTH[t],
+                summary.loc[summary.speed_condition == i, 'median'],
+                s=75, color=COLORS[t], label=LABELS[t]
+            )
 
+            ax.errorbar(
+                X_AXIS_VALUES + BAR_WIDTH[t],
+                summary.loc[summary.speed_condition == i, 'median'],
+                yerr=summary.loc[summary.speed_condition == i, 'mad'],
+                # fmt='none', capsize=5, elinewidth=2,
+                # color=COLORS[t]
+                fmt='o', color=COLORS[t], markersize=8, elinewidth=2, capsize=0
+                )
+
+            handles.append(
+                Line2D(
+                    xdata=[], ydata=[], marker='o', markersize=10, lw=3,
+                    color=COLORS[t], label=LABELS[t]
+                )
+            )
+
+        ax.set_title(CONDITION_NAMES[i], fontsize=FONT_SIZE_1)
+
+        x_labels = ['1', '2', '3', '4']
+        x_positions = [0, 2, 4, 6]
+        ax.set_xticks(x_positions, x_labels)
+
+        ax.set_ylim([
+            summaries[0]["median"].min() - 0.1,
+            summaries[0]["median"].max() + 0.4])
+
+        ax.tick_params(axis='both', which='major', labelsize=FONT_SIZE_3)
+        if i == 0:
+            ax.set_ylabel("Response Time", labelpad=10, fontsize=FONT_SIZE_2)
+
+        ax.set_xlabel("Difficulty", labelpad=10, fontsize=FONT_SIZE_2)
+
+    # legend
+    fig.subplots_adjust(hspace=0.5)
+    fig.legend(
+        handles,
+        LABELS,
+        fontsize=FONT_SIZE_2, bbox_to_anchor=(0.5, -0.05),
+        loc="center", ncol=5
+        )
+    sns.despine()
+    fig.tight_layout()
+    return fig
 
 
 if __name__ == '__main__':
-    for sub in range(NUM_SUBJECTS):
-        person_data = data.loc[data.id == sub+1]
-        grouped = data.groupby(['speed_condition', 'difficulty'])
-        person_summary = grouped.agg({
-            'rt': ['median', lambda x: np.median(np.abs(x - np.median(x)))]
-        })
-        person_summary = person_summary.reset_index(drop=False)
-        person_summary.columns = ['speed_condition', 'difficulty', 'median', 'mad']
+    # compute overall empiric summaries
+    grouped_data = data.groupby(['speed_condition', 'difficulty'])
+    overall_summary = grouped_data.agg({
+                'rt': ['median', lambda x: np.median(np.abs(x - np.median(x)))]
+            }).reset_index(drop=False)
+    overall_summary.columns = ['speed_condition', 'difficulty', 'median', 'mad']
 
-        # parameter trajectory of winning model
-        winning_model = winning_model_per_person[sub]
-        local_samples = samples_per_model[winning_model]['local_samples'][sub]
-        f = plot_parameter_trajectory(person_data, local_samples, MODEL_NAMES[winning_model])
-        f.savefig(f"plots/parameter_trajectory_sub_{sub+1}.pdf", dpi=300, bbox_inches="tight")
-        
-        # posterior re-simulation for all models
-        idx = np.random.choice(np.arange(NUM_SAMPLES), NUM_RESIMULATIONS, replace=False)
-        summaries = []
-        summaries.append(person_summary)
-        for i, model in enumerate(models):
-            pred_data = np.abs(
-                model.likelihood(samples_per_model[i]['local_samples'][sub, :, idx, :])['sim_data']
-                )
-            pred_df = pd.DataFrame({
-                'speed_condition': np.tile(person_data['speed_condition'], NUM_RESIMULATIONS),
-                'difficulty': np.tile(person_data['difficulty'], NUM_RESIMULATIONS),
-                'rt': pred_data.flatten(),
-                })
-            grouped = pred_df.groupby(['difficulty', 'speed_condition'])
-            pred_summary = grouped.agg({
+    summary_per_model = []
+    resim_data_per_model = []
+    summary_per_model.append(overall_summary)
+    for i, model in enumerate(models):
+        resim_data = np.zeros((NUM_SUBJECTS, NUM_RESIMULATIONS, NUM_OBS, 3))
+        for sub in range(NUM_SUBJECTS):
+            # compute indiviudal summaries
+            person_data = data.loc[data.id == sub+1]
+            grouped = data.groupby(['speed_condition', 'difficulty'])
+            person_summary = grouped.agg({
                 'rt': ['median', lambda x: np.median(np.abs(x - np.median(x)))]
             })
-            pred_summary = pred_summary.reset_index(drop=False)
-            pred_summary.columns = ['difficulty', 'speed_condition', 'median', 'mad']
-            summaries.append(pred_summary)
+            person_summary = person_summary.reset_index(drop=False)
+            person_summary.columns = ['speed_condition', 'difficulty', 'median', 'mad']
+            # parameter trajectory of winning model
+            winning_model = winning_model_per_person[sub]
+            local_samples = samples_per_model[winning_model]['local_samples'][sub]
+            f = plot_parameter_trajectory(person_data, local_samples, winning_model)
+            f.savefig(f"plots/parameter_trajectory_sub_{sub+1}.pdf", dpi=300, bbox_inches="tight")
+            plt.close()
+            # posterior re-simulation for all models
+            idx = np.random.choice(np.arange(NUM_SAMPLES), NUM_RESIMULATIONS, replace=False)
+            pred_data = np.abs(
+                model.likelihood(samples_per_model[i]['local_samples'][sub, :, idx, :])['sim_data']
+            )
+            pred_rt = pred_data[:, :, None]
+            condition = np.tile(person_data['speed_condition'], (NUM_RESIMULATIONS, 1))[:, :, None]
+            difficulty = np.tile(person_data['difficulty'], (NUM_RESIMULATIONS, 1))[:, :, None]
+            resim_data[sub] = np.c_[pred_rt, condition, difficulty]
         
-
-
-
+        resim_data_per_model.append(resim_data)
+        # overall re-simulation
+        reshaped_data = resim_data.reshape(-1, 3)
+        df = pd.DataFrame(reshaped_data, columns=['rt', 'speed_condition', 'difficulty'])
+        grouped_data = df.groupby(['speed_condition', 'difficulty'])
+        summary = grouped_data.agg({
+            'rt': ['median', lambda x: np.median(np.abs(x - np.median(x)))]
+        })
+        summary = summary.reset_index(drop=False)
+        summary.columns = ['speed_condition', 'difficulty', 'median', 'mad']
+        summary_per_model.append(summary)
+        f = plot_posterior_resimulation(summary_per_model)
+        f.savefig("plots/post_resimulation_overall.pdf", dpi=300, bbox_inches="tight")
+        plt.close()
+    # individual re-simulation
+    for sub in range(NUM_SUBJECTS):
+        # compute indiviudal summaries
+        person_data = data.loc[data.id == sub+1]
+        grouped = person_data.groupby(['speed_condition', 'difficulty'])
+        person_summary = grouped.agg({
+            'rt': ['median', lambda x: np.median(np.abs(x - np.median(x)))]
+        }).reset_index(drop=False)
+        person_summary.columns = ['speed_condition', 'difficulty', 'median', 'mad']
+        summaries = []
+        summaries.append(person_summary)
+        for i in range(len(models)):
+            temp_data = resim_data_per_model[i][sub]
+            reshaped_data = temp_data.reshape(-1, 3)
+            df = pd.DataFrame(reshaped_data, columns=['rt', 'speed_condition', 'difficulty'])
+            grouped_data = df.groupby(['speed_condition', 'difficulty'])
+            summary = grouped_data.agg({
+                'rt': ['median', lambda x: np.median(np.abs(x - np.median(x)))]
+            }).reset_index(drop=False)
+            summary.columns = ['speed_condition', 'difficulty', 'median', 'mad']
+            summaries.append(summary)
+        f = plot_posterior_resimulation(summaries)
+        f.savefig(f"plots/post_resimulation_{sub+1}.pdf", dpi=300, bbox_inches="tight")
+        plt.close()
