@@ -4,6 +4,7 @@ import pandas as pd
 import seaborn as sns
 import pickle
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 
 from tqdm import tqdm
 from tensorflow.keras.backend import clear_session
@@ -14,14 +15,14 @@ import matplotlib
 matplotlib.rcParams['font.sans-serif'] = "Palatino"
 matplotlib.rcParams['font.family'] = "sans-serif"
 
-FIT_MODEL = True
+FIT_MODEL = False
 
 NUM_OBS = 768
 NUM_MODELS = 4
 ENSEMBLE_SIZE = 10
 MODEL_NAMES = [
-    'Random walk', 'Mixture random walk',
-    'Levy flight', 'Regime switching'
+    'Random\nwalk', 'Mixture\nrandom\nwalk',
+    'Levy\nflight', 'Regime\nswitching'
     ]
 FONT_SIZE_1 = 24
 FONT_SIZE_2 = 20
@@ -61,34 +62,60 @@ if __name__ == '__main__':
     binary_model_prob_per_ensemble = binary_model_prob.mean(axis=1)
     mean_binary_model_prob_per_ensemble = binary_model_prob_per_ensemble.mean(axis=0)
     std_binary_model_prob_per_ensemble = binary_model_prob_per_ensemble.std(axis=0)
+    # compute mean log10 bayes factors
+    pmps = np.stack(model_probs_per_ensemble)
+    bayes_factors = np.log10(pmps[:, :, np.newaxis, :] / pmps[:, :, :, np.newaxis])
+    mean_bf = np.mean(bayes_factors, axis=(0, 1))
 
-    fig, ax = plt.subplots(1, 1, figsize=(5, 5))
-    ax.scatter(
+    # plot PMP
+    fig, ax = plt.subplots(1, 2, figsize=(9, 3), gridspec_kw={'width_ratios': [0.55, 1]})
+    ax[0].scatter(
         MODEL_NAMES,
         mean_binary_model_prob_per_ensemble,
-        color='maroon', alpha=1.0
+        color='maroon', alpha=1.0, s=15
     )
-    ax.errorbar(
+    ax[0].errorbar(
         MODEL_NAMES,
         mean_binary_model_prob_per_ensemble,
         yerr=std_binary_model_prob_per_ensemble,
         fmt='none', capsize=5, elinewidth=1,
         color='maroon', alpha=0.8
-        )
+    )
+    ax[0].set_xticks(MODEL_NAMES, MODEL_NAMES)
+    ax[0].tick_params(axis='both', which='major', labelsize=10)
+    ax[0].set_ylabel("Average maximal PMP", labelpad=10, fontsize=12)
+    ax[0].set_xlabel("", labelpad=10, fontsize=12)
+    ax[0].set_ylim(-0.05, 1)
+    ax[0].spines['right'].set_visible(False)
+    ax[0].spines['top'].set_visible(False)
 
-    ax.set_xticks(MODEL_NAMES, MODEL_NAMES, rotation=45, ha="right")
-    ax.tick_params(axis='both', which='major', labelsize=FONT_SIZE_3)
-    ax.set_ylabel("Average maximal\nmodel probabilty", rotation=0, labelpad=90, fontsize=FONT_SIZE_2)
-    ax.set_xlabel("Model", fontsize=FONT_SIZE_2)
-    ax.set_ylim(-0.05, 1)
-    sns.despine()
+    ax[1] = sns.heatmap(
+        mean_bf,
+        cmap=LinearSegmentedColormap.from_list("", ["white", "#8f2727"]),
+        annot=True,
+        square=True,
+        xticklabels=MODEL_NAMES,
+        yticklabels=MODEL_NAMES,
+        cbar_kws={"shrink": .85},
+        annot_kws={"fontsize":9}
+    )
+    ax[1].axhline(y=0, color='k',linewidth=1.5)
+    ax[1].axhline(y=mean_bf.shape[1], color='k',linewidth=1.5)
+    ax[1].axvline(x=0, color='k',linewidth=1.5)
+    ax[1].axvline(x=mean_bf.shape[0], color='k',linewidth=1.5)
 
+    ax[1].tick_params(axis='both', which='major', labelsize=10)
+    ax[1].tick_params(axis='y', which='major', labelsize=10, rotation=0)
+
+    cbar = ax[1].collections[0].colorbar
+    cbar.ax.tick_params(labelsize=9)
+
+    plt.subplots_adjust(wspace=0.0, hspace=0.0)
     fig.savefig("plots/model_probabilties.pdf", dpi=300, bbox_inches="tight")
-
+    # determine winning model per person
     binary_model_prob_per_person = binary_model_prob.mean(axis=0)
     winning_model_per_person = np.argmax(binary_model_prob_per_person, axis=1)
     winning_model_per_person[-1] = 2
-
     file_paths = ['data/winning_model_per_person.pkl', '../inference/data/winning_model_per_person.pkl']
     for file_path in file_paths:
         with open(file_path, 'wb') as file:

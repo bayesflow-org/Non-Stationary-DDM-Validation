@@ -2,6 +2,7 @@ import numpy as np
 from scipy.stats import halfnorm, truncnorm, levy_stable
 from configurations import default_priors, default_bounds
 
+
 def sample_ddm_params(loc=default_priors["ddm_loc"],
                       scale=default_priors["ddm_scale"],
                       a=default_bounds["lower"],
@@ -34,7 +35,7 @@ def sample_ddm_params(loc=default_priors["ddm_loc"],
         b=upper,
         loc=loc,
         scale=scale
-        )
+    )
 
 def sample_random_walk_hyper(loc=default_priors["scale_loc"],
                              scale=default_priors["scale_scale"]):
@@ -54,6 +55,7 @@ def sample_random_walk_hyper(loc=default_priors["scale_loc"],
     """
 
     return halfnorm.rvs(loc=loc, scale=scale)
+
 
 def sample_mixture_random_walk_hyper(loc=default_priors["scale_loc"],
                                      scale=default_priors["scale_scale"],
@@ -120,6 +122,7 @@ def sample_levy_flight_hyper(loc=default_priors["scale_loc"],
     alphas = rng.beta(a=a, b=b) + 1.0
     return np.concatenate([scales, alphas])
 
+
 def sample_regime_switching_hyper(loc=default_priors["scale_loc"],
                                   scale=default_priors["scale_scale"],
                                   low=default_priors["q_low"],
@@ -153,6 +156,7 @@ def sample_regime_switching_hyper(loc=default_priors["scale_loc"],
     scales = halfnorm.rvs(loc=loc[2], scale=scale[2])
     switch_probabilities = rng.uniform(low=low, high=high)
     return np.concatenate([switch_probabilities, [scales]])
+
 
 def sample_random_walk(hyper_params,
                        num_steps=800,
@@ -195,6 +199,7 @@ def sample_random_walk(hyper_params,
         )
     return theta_t
 
+
 def sample_mixture_random_walk(hyper_params,
                                num_steps=800,
                                lower_bounds=default_bounds["lower"],
@@ -234,27 +239,28 @@ def sample_mixture_random_walk(hyper_params,
     # transition model
     for t in range(1, num_steps):
         # update v
-        if stay[t-1, 0]:
+        if stay[t - 1, 0]:
             theta_t[t, 0] = np.clip(
-                theta_t[t-1, 0] + hyper_params[0] * z[t-1, 0],
+                theta_t[t - 1, 0] + hyper_params[0] * z[t - 1, 0],
                 a_min=lower_bounds[0], a_max=upper_bounds[0]
-                )
+            )
         else:
             theta_t[t, 0] = rng.uniform(lower_bounds[0], upper_bounds[0])
         # update a
-        if stay[t-1, 1]:
+        if stay[t - 1, 1]:
             theta_t[t, 1] = np.clip(
-                theta_t[t-1, 1] + hyper_params[1] * z[t-1, 1],
+                theta_t[t - 1, 1] + hyper_params[1] * z[t - 1, 1],
                 a_min=lower_bounds[1], a_max=upper_bounds[1]
-                )
-        else:
-            theta_t[t, 1] = rng.uniform(lower_bounds[1], upper_bounds[1]) 
-        # update tau
-        theta_t[t, 2] = np.clip(
-            theta_t[t-1, 2] + hyper_params[2] * z[t-1, 2],
-            a_min=lower_bounds[2], a_max=upper_bounds[2]
             )
+        else:
+            theta_t[t, 1] = rng.uniform(lower_bounds[1], upper_bounds[1])
+            # update tau
+        theta_t[t, 2] = np.clip(
+            theta_t[t - 1, 2] + hyper_params[2] * z[t - 1, 2],
+            a_min=lower_bounds[2], a_max=upper_bounds[2]
+        )
     return theta_t
+
 
 def sample_levy_flight(hyper_params,
                        num_steps=800,
@@ -296,15 +302,16 @@ def sample_levy_flight(hyper_params,
     for t in range(1, num_steps):
         # update v and a
         theta_t[t, :2] = np.clip(
-            theta_t[t-1, :2] + z_levy[t-1],
+            theta_t[t - 1, :2] + z_levy[t - 1],
             a_min=lower_bounds[:2], a_max=upper_bounds[:2]
-            )
+        )
         # update tau
         theta_t[t, 2] = np.clip(
-            theta_t[t-1, 2] + hyper_params[2] * z_norm[t-1],
+            theta_t[t - 1, 2] + hyper_params[2] * z_norm[t - 1],
             a_min=lower_bounds[2], a_max=upper_bounds[2]
-            )
+        )
     return theta_t
+
 
 def sample_regime_switching(hyper_params,
                             num_steps=800,
@@ -345,18 +352,18 @@ def sample_regime_switching(hyper_params,
     # transition model
     for t in range(1, num_steps):
         # update v
-        if stay[t-1, 0]:
-            theta_t[t, 0] = theta_t[t-1, 0]
+        if stay[t - 1, 0]:
+            theta_t[t, 0] = theta_t[t - 1, 0]
         else:
             theta_t[t, 0] = rng.uniform(lower_bounds[0], upper_bounds[0])
         # update a
-        if stay[t-1, 1]:
-            theta_t[t, 1] = theta_t[t-1, 1]
+        if stay[t - 1, 1]:
+            theta_t[t, 1] = theta_t[t - 1, 1]
         else:
             theta_t[t, 1] = rng.uniform(lower_bounds[1], upper_bounds[1])
         # update tau
         theta_t[t, 2] = np.clip(
-            theta_t[t-1, 2] + hyper_params[2] * z_norm[t-1],
+            theta_t[t - 1, 2] + hyper_params[2] * z_norm[t - 1],
             a_min=lower_bounds[2], a_max=upper_bounds[2]
-            )
+        )
     return theta_t

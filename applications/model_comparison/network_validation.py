@@ -17,10 +17,10 @@ FIT_MODEL = False
 NUM_MODELS = 4
 ENSEMBLE_SIZE = 10
 SIMULATION_PER_MODEL = 10000
-CHUNCK_SIZE = 200
+CHUNK_SIZE = 200
 MODEL_NAMES = [
-    'Random walk', 'Mixture random walk',
-    'Levy flight', 'Regime switching'
+    'Random\nwalk', 'Mixture\nrandom\nwalk',
+    'Levy\nflight', 'Regime\nswitching'
     ]
 
 with open('data/validation_data.pkl', 'rb') as f:
@@ -29,12 +29,13 @@ with open('data/validation_data.pkl', 'rb') as f:
 configurator = beef.configuration.DefaultModelComparisonConfigurator(NUM_MODELS)
 
 model_indices = tf.one_hot(np.tile(np.repeat(
-    [0, 1, 2, 3], CHUNCK_SIZE), int((SIMULATION_PER_MODEL/CHUNCK_SIZE))), NUM_MODELS
+    [0, 1, 2, 3], CHUNK_SIZE), int((SIMULATION_PER_MODEL/CHUNK_SIZE))), NUM_MODELS
     )
+
 
 def get_model_probabilities(trainer):
     model_probs = np.zeros((int(SIMULATION_PER_MODEL*NUM_MODELS), NUM_MODELS))
-    chunks = np.arange(0, SIMULATION_PER_MODEL+1, CHUNCK_SIZE)
+    chunks = np.arange(0, SIMULATION_PER_MODEL+1, CHUNK_SIZE)
     for i in range(len(chunks)-1):
         sim_1 = {'sim_data': validation_data['model_outputs'][0]['sim_data'][chunks[i]:chunks[i+1]]}
         sim_2 = {'sim_data': validation_data['model_outputs'][1]['sim_data'][chunks[i]:chunks[i+1]]}
@@ -53,13 +54,14 @@ def get_model_probabilities(trainer):
             )
     return model_probs
 
+
 if __name__ == '__main__':
     if FIT_MODEL:
         model_probs_per_ensemble = np.zeros((ENSEMBLE_SIZE, SIMULATION_PER_MODEL*NUM_MODELS, NUM_MODELS))
         for ensemble in tqdm(range(ENSEMBLE_SIZE)):
             clear_session()
             trainer = ModelComparisonExperiment(
-            checkpoint_path=f'checkpoints/ensemble_{ensemble}'
+                checkpoint_path=f'checkpoints/ensemble_{ensemble}'
             )
             model_probs_per_ensemble[ensemble] = get_model_probabilities(trainer)
 
@@ -73,22 +75,26 @@ if __name__ == '__main__':
     cal_curves = beef.diagnostics.plot_calibration_curves(
         true_models=model_indices,
         pred_models=average_model_probs,
-        model_names=MODEL_NAMES,
-        fig_size=(18, 4),
-        title_fontsize=22,
-        label_fontsize=20,
-        tick_fontsize=18,
-        legend_fontsize=18
-        )
-
+        model_names=['Random walk', 'Mixture random walk',
+        'Levy flight', 'Regime switching'],
+        fig_size=(8, 8),
+        title_fontsize=24,
+        label_fontsize=22,
+        tick_fontsize=20,
+        legend_fontsize=20,
+        n_row=2
+    )
     cal_curves.savefig("plots/calibration_curves.pdf", dpi=300, bbox_inches="tight")
 
     confusion_matrix = beef.diagnostics.plot_confusion_matrix(
         model_indices,
         average_model_probs,
         model_names=MODEL_NAMES,
-        xtick_rotation=45,
-        ytick_rotation=0
-        )
-
+        ytick_rotation=0,
+        title=False,
+        fig_size=(8, 8),
+        label_fontsize=20,
+        tick_fontsize=18,
+        value_fontsize=18,
+    )
     confusion_matrix.savefig("plots/confusion_matrix.pdf", dpi=300, bbox_inches="tight")
