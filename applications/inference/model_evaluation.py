@@ -86,7 +86,7 @@ def plot_parameter_trajectory(person_data, local_samples, winning_model, lw=2):
             range(NUM_OBS),
             post_median[:, i] - post_mad[:, i],
             post_median[:, i] + post_mad[:, i],
-            color=COLORS[winning_model+1], alpha=0.5, label="Posterior MAD"
+            color=COLORS[winning_model+1], alpha=0.5, label="Posterior MAD", linewidth=0.0
             )
         # yellow shades
         x = 0
@@ -431,7 +431,7 @@ if __name__ == '__main__':
                 range(NUM_OBS),
                 post_median[0][:, int(i/2)] - post_mad[0][:, int(i/2)],
                 post_median[0][:, int(i/2)] + post_mad[0][:, int(i/2)],
-                color=COLORS[winning_model[0]+1], alpha=0.5, label="Posterior MAD"
+                color=COLORS[winning_model[0]+1], alpha=0.5, label="Posterior MAD", linewidth=0.0
                 )
             # yellow shades
             x = 0
@@ -458,13 +458,13 @@ if __name__ == '__main__':
             ax.plot(
                 range(NUM_OBS),
                 post_median[1][:, int((i-1)/2)], 
-                color=COLORS[winning_model[1]+1], alpha=0.9, lw=2, label="Posterior median"
+                color=COLORS[winning_model[1]+1], alpha=0.9, lw=2, label="Posterior median",
                 )
             ax.fill_between(
                 range(NUM_OBS),
                 post_median[1][:, int((i-1)/2)] - post_mad[1][:, int((i-1)/2)],
                 post_median[1][:, int((i-1)/2)] + post_mad[1][:, int((i-1)/2)],
-                color=COLORS[winning_model[1]+1], alpha=0.5, label="Posterior MAD"
+                color=COLORS[winning_model[1]+1], alpha=0.5, label="Posterior MAD", linewidth=0.0
                 )
             # yellow shades
             x = 0
