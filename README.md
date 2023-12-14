@@ -6,11 +6,17 @@ The code depends on the [BayesFlow](https://github.com/stefanradev93/BayesFlow) 
 
 ## [Applications](applications)
 
-All applications are structured as runable python scripts, which are detailed below.
+All applications are structured as runable python scripts or jupyter notebooks, which are detailed below.
 
 ### Inference
 
-- 
+- [Model evaluation](applications/inference/model_evaluation.py): Visualization of inferred parameter trajectory and aggregated posterior re-simulation results.
+- [Response time series](applications/inference/notebooks/response_time_series.ipynb): Posterior re-simulation and prediction of response time series.
+
+### Model comparison
+
+- [Network validation](applications/model_comparison/network_validation.py): In silico model comparison and sensitivity results.
+- [Network application](applications/model_comparison/network_application.py): Empirical model comparison results.
 
 ## Support
 
