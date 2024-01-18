@@ -4,10 +4,6 @@ This repository contains the data and code for running the experiments and repro
 
 The code depends on the [BayesFlow](https://github.com/stefanradev93/BayesFlow) library, which implements the neural network architectures and training utilities.
 
-## [Applications](applications)
-
-All applications are structured as runable python scripts or jupyter notebooks, which are detailed below.
-
 ## Cite
 
 ```bibtex
@@ -21,6 +17,10 @@ All applications are structured as runable python scripts or jupyter notebooks, 
     publisher = {{arXiv}},
 }
 ```
+
+## [Applications](applications)
+
+All applications are structured as runable python scripts or jupyter notebooks, which are detailed below.
 
 ### Inference
 
