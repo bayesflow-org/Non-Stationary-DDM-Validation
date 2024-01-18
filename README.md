@@ -1,12 +1,26 @@
 # Validation of a Non-Stationary Cognitive Models
 
-This repository contains the data and code for running the experiments and reproducing all results reported in our paper "Validation and Comparison of Non-Stationary Cognitive Models: A Diffusion Model Application". Superstatistics are emerging as a flexible framework for incorporating such *non-stationary* dynamics into existing cognitive model classes. In this work, we provide the first experimental validation of superstatistics and formal comparison of four non-stationary diffusion decision models in a specifically designed perceptual decision-making task.
+This repository contains the data and code for running the experiments and reproducing all results reported in our paper [Validation and Comparison of Non-Stationary Cognitive Models: A Diffusion Model Application]([https://arxiv.org/abs/2211.13165](https://arxiv.org/abs/2401.08626)). Superstatistics are emerging as a flexible framework for incorporating *non-stationary* dynamics into existing cognitive model classes. In this work, we provide the first experimental validation of superstatistics and formal comparison of four non-stationary diffusion decision models in a specifically designed perceptual decision-making task.
 
 The code depends on the [BayesFlow](https://github.com/stefanradev93/BayesFlow) library, which implements the neural network architectures and training utilities.
 
 ## [Applications](applications)
 
 All applications are structured as runable python scripts or jupyter notebooks, which are detailed below.
+
+## Cite
+
+```bibtex
+@article{schumacher2023,
+    title = Validation and Comparison of Non-Stationary Cognitive Models: A Diffusion Model Application,
+    author = {Schumacher, Lukas and Schnuerch, Martin and Voss, Andreas and Radev, Stefan T.},
+    year = {2023},
+    number = {arXiv:2401.08626},
+    eprint = {2401.08626},
+    primaryclass = {q-bio, stat},
+    publisher = {{arXiv}},
+}
+```
 
 ### Inference
 
