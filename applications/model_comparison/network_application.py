@@ -52,42 +52,44 @@ if __name__ == '__main__':
 
         np.save('data/empiric_model_probs_per_ensemble.npy', model_probs_per_ensemble)
     else:
-        model_probs_per_ensemble = np.load('data/empiric_model_probs_per_ensemble.npy')
+        model_probs = np.load('data/empiric_model_probs_per_ensemble.npy')
 
     # compute proportion winning model
-    binary_model_prob = np.zeros(model_probs_per_ensemble.shape)
-    for i in range(ENSEMBLE_SIZE):
-        tmp_mat = model_probs_per_ensemble[i]
+    binary_model_prob = np.zeros(model_probs.shape)
+    for i in range(10):
+        tmp_mat = model_probs[i]
         binary_model_prob[i][np.arange(tmp_mat.shape[0]), np.argmax(tmp_mat, axis=1)] = 1
     binary_model_prob_per_ensemble = binary_model_prob.mean(axis=1)
     mean_binary_model_prob_per_ensemble = binary_model_prob_per_ensemble.mean(axis=0)
     std_binary_model_prob_per_ensemble = binary_model_prob_per_ensemble.std(axis=0)
     # compute mean log10 bayes factors
-    pmps = np.stack(model_probs_per_ensemble)
+    pmps = np.stack(model_probs)
     bayes_factors = np.log10(pmps[:, :, np.newaxis, :] / pmps[:, :, :, np.newaxis])
     mean_bf = np.mean(bayes_factors, axis=(0, 1))
 
     # plot PMP
     fig, ax = plt.subplots(1, 2, figsize=(9, 3), gridspec_kw={'width_ratios': [0.55, 1]})
-    ax[0].scatter(
-        MODEL_NAMES,
-        mean_binary_model_prob_per_ensemble,
-        color='maroon', alpha=1.0, s=15
+    parts = ax[0].violinplot(
+        # mean_model_probs
+        model_probs.reshape((10*14, 4))
     )
-    ax[0].errorbar(
-        MODEL_NAMES,
-        mean_binary_model_prob_per_ensemble,
-        yerr=std_binary_model_prob_per_ensemble,
-        fmt='none', capsize=5, elinewidth=1,
-        color='maroon', alpha=0.8
-    )
-    ax[0].set_xticks(MODEL_NAMES, MODEL_NAMES)
+    for pc in parts['bodies']:
+        pc.set_facecolor('maroon')
+        pc.set_alpha(0.5)
+
+    parts['cbars'].set_color('maroon')
+    # parts['cmeans'].set_color('maroon')
+    parts['cmaxes'].set_color('maroon')
+    parts['cmins'].set_color('maroon')
+
+    ax[0].set_xticks(np.arange(1,5), MODEL_NAMES)
+
     ax[0].tick_params(axis='both', which='major', labelsize=10)
-    ax[0].set_ylabel("Average maximal PMP", labelpad=10, fontsize=12)
+    ax[0].set_ylabel("Posterior model probability", labelpad=10, fontsize=12)
     ax[0].set_xlabel("", labelpad=10, fontsize=12)
-    ax[0].set_ylim(-0.05, 1)
-    ax[0].spines['right'].set_visible(False)
-    ax[0].spines['top'].set_visible(False)
+    ax[0].set_ylim(0.0, 1)
+    ax[0].grid(alpha=0.3)
+    sns.despine()
 
     ax[1] = sns.heatmap(
         mean_bf,
