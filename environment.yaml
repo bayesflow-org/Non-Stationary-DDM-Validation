@@ -1,0 +1,8 @@
+# run: conda env create --file environment.yaml
+
+name: NS-DDM_Validation
+dependencies:
+  - python==3.11
+  - pip
+  - pip:
+    - bayesflow==1.1.5.
