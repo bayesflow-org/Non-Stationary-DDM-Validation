@@ -16,7 +16,6 @@ The code depends on the [BayesFlow](https://github.com/stefanradev93/BayesFlow) 
   shorttitle = {Validation and {{Comparison}} of {{Non-stationary Cognitive Models}}},
   author = {Schumacher, Lukas and Schnuerch, Martin and Voss, Andreas and Radev, Stefan T.},
   year = {2024},
-  month = oct,
   journal = {Computational Brain \& Behavior},
   doi = {10.1007/s42113-024-00218-4}
 }
