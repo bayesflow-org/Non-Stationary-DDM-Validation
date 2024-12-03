@@ -12,8 +12,7 @@ The code depends on the [BayesFlow](https://github.com/stefanradev93/BayesFlow) 
 
 ```bibtex
 @article{schumacher2024,
-  title = {Validation and {{Comparison}} of {{Non-stationary Cognitive Models}}: {{A Diffusion Model Application}}},
-  shorttitle = {Validation and {{Comparison}} of {{Non-stationary Cognitive Models}}},
+  title = {Validation and Comparison of Non-stationary Cognitive Models: A Diffusion Model Application},
   author = {Schumacher, Lukas and Schnuerch, Martin and Voss, Andreas and Radev, Stefan T.},
   year = {2024},
   journal = {Computational Brain \& Behavior},
